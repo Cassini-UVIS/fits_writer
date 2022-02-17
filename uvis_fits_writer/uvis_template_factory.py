@@ -25,9 +25,6 @@ class UVISFitsHDUList(fits.HDUList):
         self.primary_hdu = fits.PrimaryHDU()
         self.append(self.primary_hdu)
         
-    def get_primary_hdu(self):
-        return self.primary_hdu
-        
     def add_header_item(self, hdu, name, value, comment=None):
         hdu.header[name] = (value, comment)
         
@@ -89,7 +86,7 @@ class UVISFitsTemplateFactory(object):
         -------
         '''
         
-        primary_hdu = self.hdu_list.get_primary_hdu()
+        primary_hdu = self.hdu_list.primary_hdu
         
         # w = np.where(template['HDU NAME'] == 'PRIMARY_HEADER')
         # header_rows = template[w]
