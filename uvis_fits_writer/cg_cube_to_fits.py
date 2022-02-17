@@ -6,7 +6,6 @@ Created on 29 Nov 2021
 TODO: Old cubes vs new cubes.  Need to handle both.  For example, the cal factor matrix.
 TODO: Handle fits, sav and PDS files
 TODO: Handle cube files with only one datastruct (hdu)
-TODO: Handle different XBIN values.
 TODO: Discussion on why original cubes removed ymin offset from all images and backplanes?  
       Shouldn't we maintain pixel position throughout?  For now, I'm just copying
       things over, leaving the images at y=0
@@ -208,10 +207,25 @@ class CGCubeToFITS(object):
                     
             # Add wavelengths, since they are not in the original cube
             xbin = hdu_list[1].data['XBIN'][0][0]
-            wavelengths = cassini_uvis_fuv_wavelengths(xbin)
-            new_hdu_list['WAVELENGTH'].data['WAVELENGTH_FUV'] = wavelengths
-            wavelengths = cassini_uvis_euv_wavelengths(xbin)
-            new_hdu_list['WAVELENGTH'].data['WAVELENGTH_EUV'] = wavelengths
+            # wavelengths = cassini_uvis_fuv_wavelengths(xbin)
+            # new_hdu_list['WAVELENGTH'].data['WAVELENGTH_FUV'] = wavelengths
+            # wavelengths = cassini_uvis_euv_wavelengths(xbin)
+            # new_hdu_list['WAVELENGTH'].data['WAVELENGTH_EUV'] = wavelengths
+            
+            table = Table(new_hdu_list['WAVELENGTH'].data)
+            name = new_hdu_list['WAVELENGTH'].name
+            header = new_hdu_list['WAVELENGTH'].header
+            if channel == 'FUV':
+                wavelengths = cassini_uvis_fuv_wavelengths(xbin)
+                new_hdu_list['WAVELENGTH'].data['WAVELENGTH_FUV'] = wavelengths
+                table = Table(new_hdu_list['WAVELENGTH'].data)
+                table.remove_column('WAVELENGTH_EUV')
+            else:
+                wavelengths = cassini_uvis_euv_wavelengths(xbin)
+                new_hdu_list['WAVELENGTH'].data['WAVELENGTH_EUV'] = wavelengths
+                table = Table(new_hdu_list['WAVELENGTH'].data)
+                table.remove_column('WAVELENGTH_FUV')
+            new_hdu_list['WAVELENGTH'] = fits.BinTableHDU(table, name=name, header=header)
             
             # Kernel files
             if kernel_list is not None:
