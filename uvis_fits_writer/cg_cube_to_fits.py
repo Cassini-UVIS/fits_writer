@@ -24,7 +24,7 @@ from spiceypy import spiceypy as cspice
 import subprocess
 
 def cassini_uvis_euv_wavelengths(xbin):
-    """
+    '''
     This function was originally written in IDL by the Cassini UVIS processing team. 
     The IDL source code can be found at https://github.com/Cassini-UVIS/tools
     Ported to Python by Emma Lieb : https://github.com/emmalieb/SALSA
@@ -36,7 +36,7 @@ def cassini_uvis_euv_wavelengths(xbin):
     :rtype:        numpy.array, float64
     
     TODO: This should be moved to a general library of UVIS functions.
-    """
+    '''
     
     RAD=180.0/np.pi
     D=1.E7/1371.
@@ -55,7 +55,7 @@ def cassini_uvis_euv_wavelengths(xbin):
     return e_wavelength
 
 def cassini_uvis_fuv_wavelengths(xbin):
-    """
+    '''
     This function was originally written in IDL by the Cassini UVIS processing team. 
     The IDL source code can be found at https://github.com/Cassini-UVIS/tools
     Ported to Python by Emma Lieb : https://github.com/emmalieb/SALSA
@@ -67,7 +67,7 @@ def cassini_uvis_fuv_wavelengths(xbin):
     :rtype:        numpy.array, float64
     
     TODO: This should be moved to a general library of UVIS functions.
-    """
+    '''
     RAD=180./np.pi
     D=1.E7/1066
     ALP=(9.22+.032)/RAD
@@ -86,15 +86,15 @@ def cassini_uvis_fuv_wavelengths(xbin):
     return e_wavelength
 
 class CGCubeToFITS(object):
-    """
+    '''
     This class maps an existing Cassini UVIS Cube file into the new FITS format
     given a template.
-    """
+    '''
     
     def __init__(self):
-        """
+        '''
         Constructor.
-        """
+        '''
         pass
     
     def convert_to_fits(self, template_file, cube_file, output_file, pds_label_file, 
@@ -207,11 +207,6 @@ class CGCubeToFITS(object):
                     
             # Add wavelengths, since they are not in the original cube
             xbin = hdu_list[1].data['XBIN'][0][0]
-            # wavelengths = cassini_uvis_fuv_wavelengths(xbin)
-            # new_hdu_list['WAVELENGTH'].data['WAVELENGTH_FUV'] = wavelengths
-            # wavelengths = cassini_uvis_euv_wavelengths(xbin)
-            # new_hdu_list['WAVELENGTH'].data['WAVELENGTH_EUV'] = wavelengths
-            
             table = Table(new_hdu_list['WAVELENGTH'].data)
             name = new_hdu_list['WAVELENGTH'].name
             header = new_hdu_list['WAVELENGTH'].header
@@ -232,12 +227,12 @@ class CGCubeToFITS(object):
                 self.populate_kernels_hdu(kernel_list)
             
     def populate_kernels_hdu(self, kernel_list):
-        """
+        '''
         Populate the spice kernels HDU.
         
         :param kernel_list:    List of spice kernels used for this observation
         :type kernel_list:     List of strings.
-        """
+        '''
         kernels = np.array(kernel_list)
         
         map = {}
@@ -261,18 +256,18 @@ class CGCubeToFITS(object):
         self.new_hdu_list['KERNELS'] = fits.BinTableHDU(table, name=name, header=header)
     
     def write_to_file(self, output_file, overwrite=True):
-        """
+        '''
         Write to output file.
         
         :param output_file:      Path to output FITS file.
         :type output_file:       pathLib.Path object.
         :param overwrite:        Set to overwrite output file.
         :type overwrite:         boolean
-        """
+        '''
         self.factory.write_to_file(output_file, overwrite=overwrite)
        
     def populate_primary_header(self, hdu, cube_file, pds_label_file):
-        """
+        '''
         Populate the primary header object.
         
         :param hdu:
@@ -281,7 +276,7 @@ class CGCubeToFITS(object):
         :type cube_file:
         :param pds_label_file:
         :type pds_label_file:
-        """
+        '''
         
         pds_label = pvl.load(pds_label_file)
         
@@ -341,10 +336,10 @@ class CGCubeToFITS(object):
             hdu.header[name] = value
             
 class TitanCubeToFITS(CGCubeToFITS):
-    """
+    '''
     This class maps an existing Cassini UVIS Cube file into the new FITS format
     for the Titan data products.
-    """
+    '''
     
     def convert_to_fits(self, template_file, cube_file, output_file, pds_label_file, 
                         spice_dir,
