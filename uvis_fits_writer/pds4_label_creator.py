@@ -11,6 +11,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import csv
+import pandas
 
 class PDS4LabelCreator(object):
     '''
@@ -39,7 +40,7 @@ class PDS4LabelCreator(object):
         'string': {'name':'ASCII_String', 'size':1, 'offset':0}
         }
     
-    def __init__(self, fits_file, data_product_level='1A'):
+    def __init__(self, fits_file, template_file, data_product_level='1A'):
         '''
         Constructor
         '''
@@ -63,6 +64,11 @@ class PDS4LabelCreator(object):
         
         # Get the preamble ready
         self.get_xml_preamble()
+        
+        # Get the template information:
+        self.template = pandas.read_excel(str(template_file), 
+                                          sheet_name=['L2A_product_definition', 'HDU Descriptions'])
+        print('test')
     
     def get_xml_preamble(self):        
         # Read the XML preamble:
@@ -198,18 +204,11 @@ class PDS4LabelCreator(object):
         return child
     
     def create_pds4_label(self, output_file):
-        basename = output_file.stem
 
         # Get the size of the primary HDU image, if present.
         have_primary = self.primary_hdu.data is not None
         if have_primary:
             primary_size = self.primary_hdu.data.shape
-
-        # Get product creation time from header.
-        process_date = self.primary_hdu.header.cards['DATE'].value
-        
-        # Get product version
-        file_version = str(self.primary_hdu.header.cards['VERSION'].value)
         
         # Create the root level of the XML file
         self.create_xml_root()
@@ -315,22 +314,27 @@ class PDS4LabelCreator(object):
         
         # Begin <File_Area_Observational> tag ----------------------------------
         file_area_observational = self.create_sub_element(self.xml_root, 'File_Area_Observational')
-        file = self.create_sub_element(file_area_observational, 'file', text=basename)
-        local_identifier = self.create_sub_element(file_area_observational, 'local_identifier', text='file')
-        creation_date_time = self.create_sub_element(file_area_observational, 'creation_date_time', 
-                                                     text=self.format_time_stamp(self.primary_hdu.header.cards['DATE'].value))
+        file_grp = self.create_sub_element(file_area_observational, 'file')
+        self.create_sub_element(file_grp, 'file_name', 
+                                text=self.fits_file.name)
+        self.create_sub_element(file_grp, 'local_identifier', 
+                                text='file')
+        self.create_sub_element(file_grp, 'creation_date_time', 
+                                text=self.format_time_stamp(self.primary_hdu.header.cards['DATE'].value))
         
         # Loop over HDUs
         i = 0
         for hdu in self.hdu_list:
+            # TODO: Primary HDU case.
             if i < 1:
                 i += 1
                 continue # skip the primary hdu
             self.create_table_element(file_area_observational, hdu)
+            
+        # End <File_Area_Observational> tag ------------------------------------
       
     def create_table_element(self, parent, hdu):
         # Get the byte offset of the hdu header
-        total_bytes = hdu.filebytes()
         file_info = hdu.fileinfo()
         header_offset = file_info['hdrLoc']
         data_offset = file_info['datLoc']
@@ -370,35 +374,52 @@ class PDS4LabelCreator(object):
                 n_groups += 1
             else:
                 n_fields_lbl += 1
+                
+        # Get descriptions
+        hdu_names = self.template['HDU Descriptions']['HDU NAME'].values
+        rows = self.template['HDU Descriptions'][hdu_names == hdu.name]
+        header_description = rows['Header'].values[0]
+        table_description = rows['Table'].values[0]
         
         # Make the header for this table
-        header = self.create_sub_element(parent, 'Header')
-        local_identifier = self.create_sub_element(header, 'local_identifier', text='header_' + hdu.name)
-        offset = self.create_sub_element(header, 'offset', keys={'unit':'byte'}, text=str(header_offset))
-        object_length = self.create_sub_element(header, 'object_length', keys={'unit':'byte'}, text=str(header_size))
-        parsing_standard_id = self.create_sub_element(header, 'parsing_standard_id', text='FITS 3.0')
+        header_grp = self.create_sub_element(parent, 'Header')
+        self.create_sub_element(header_grp, 'name', 
+                                text=hdu.name + '_HEADER')
+        self.create_sub_element(header_grp, 'offset', 
+                                keys={'unit':'byte'}, 
+                                text=str(header_offset))
+        self.create_sub_element(header_grp, 'object_length', 
+                                keys={'unit':'byte'}, 
+                                text=str(header_size))
+        self.create_sub_element(header_grp, 'parsing_standard_id', 
+                                text='FITS 3.0')
+        self.create_sub_element(header_grp, 'description', 
+                                text=header_description)
         
         # Table
-        table_binary = self.create_sub_element(parent, 'Table_Binary')
-        local_identifier = self.create_sub_element(table_binary, 'local_identifier', 
-                                                   text='data_' + hdu.name)
-        offset = self.create_sub_element(table_binary, 'offset', 
-                                         keys={'unit': 'byte'}, 
-                                         text=str(data_offset))
-        records = self.create_sub_element(table_binary, 'records', 
-                                          text=str(n_rows))
-        # TODO: description = self.create_sub_element(table_binary, 'description')
+        table_binary_grp = self.create_sub_element(parent, 'Table_Binary')
+        self.create_sub_element(table_binary_grp, 'name', 
+                                text=hdu.name + '_TABLE')
+        self.create_sub_element(table_binary_grp, 'offset', 
+                                keys={'unit': 'byte'}, 
+                                text=str(data_offset))
+        self.create_sub_element(table_binary_grp, 'records', 
+                                text=str(n_rows))
+        self.create_sub_element(table_binary_grp, 'description',
+                                text=table_description)
         
         # Table Record
-        record_binary = self.create_sub_element(table_binary, 'Record_Binary')
-        fields_elt = self.create_sub_element(record_binary, 'fields', text=str(n_fields_lbl))
-        groups_elt = self.create_sub_element(record_binary, 'groups', text=str(n_groups))
-        record_length_elt = self.create_sub_element(record_binary, 'record_length', 
-                                                text='%d' % record_length, 
-                                                keys={'unit': 'byte'})
+        record_binary_grp = self.create_sub_element(table_binary_grp, 'Record_Binary')
+        self.create_sub_element(record_binary_grp, 'fields', 
+                                text=str(n_fields_lbl))
+        self.create_sub_element(record_binary_grp, 'groups', 
+                                text=str(n_groups))
+        self.create_sub_element(record_binary_grp, 'record_length', 
+                                text='%d' % record_length, 
+                                keys={'unit': 'byte'})
         
-        # TODO: loop over each field in the HDU and add <Field_Binary> tags.
-        record_parent = record_binary
+        # Loop over each field in the HDU and add <Field_Binary> tags.
+        record_parent = record_binary_grp
         for i_field in range(n_fields):
             d = data[fields[i_field]][0]
             if d.size > 1:
@@ -472,7 +493,7 @@ class PDS4LabelCreator(object):
                         value_offset_elt = self.create_sub_element(field_binary_elt, 'value_offset', text=str(this_offset))
                         
             # Set the new parent
-            record_parent = record_binary
+            record_parent = record_binary_grp
     
     def write_to_file(self):        
         # Prettify the XML string
@@ -491,8 +512,10 @@ if __name__ == '__main__':
     data_dir = Path('..') / 'data'
     fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
     label_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.xml'
+    template_dir = Path('..') / 'templates'
+    template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
     
-    label_creator = PDS4LabelCreator(fits_file)
+    label_creator = PDS4LabelCreator(fits_file, template_file)
     label_creator.create_pds4_label(label_file)
     label_creator.write_to_file()
     
