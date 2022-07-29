@@ -50,7 +50,7 @@ class PDS4LabelCreator(object):
         # https://pds.nasa.gov/datastandards/dictionaries/index-1.18.0.0.shtml
         self.schema_version = '1I00'
         self.schema_disp_ver = '1I00_1510'
-        self.information_model_version = '1.18.0.0'
+        self.information_model_version = '1.16.0.0'
         
         # Data Product Level
         # TODO: Check with team on the proper data product levels.
@@ -152,7 +152,7 @@ class PDS4LabelCreator(object):
         Create a product lid as described in section 5 of the PDS Data Provider's Handbook
         TODO: Need a more generic way to construct these.
         '''
-        lid = 'urn:nasa:pds:cassini-uvis_titan-library:data:' + self.fits_file.stem
+        lid = 'urn:nasa:pds:cassini-uvis_titan-library:data:' + self.fits_file.stem.lower()
         return lid
     
     def get_investigation_area_lid(self):
@@ -259,7 +259,6 @@ class PDS4LabelCreator(object):
         discipline_name = self.create_sub_element(science_facets, 'discipline_name', 
                                                   text='Atmospheres') # TODO: Need to be able to set this for other types of observations.
         
-        # TODO: Do we need this <facet1>?  And what does the field represent?
         facet1 = self.create_sub_element(science_facets, 'facet1', text='Structure')
         
         investigation_area = self.create_sub_element(observation_area, 'Investigation_Area')
@@ -314,7 +313,7 @@ class PDS4LabelCreator(object):
         
         # Begin <File_Area_Observational> tag ----------------------------------
         file_area_observational = self.create_sub_element(self.xml_root, 'File_Area_Observational')
-        file_grp = self.create_sub_element(file_area_observational, 'file')
+        file_grp = self.create_sub_element(file_area_observational, 'File')
         self.create_sub_element(file_grp, 'file_name', 
                                 text=self.fits_file.name)
         self.create_sub_element(file_grp, 'local_identifier', 
@@ -484,9 +483,9 @@ class PDS4LabelCreator(object):
                     
                     field_binary_elt = self.create_sub_element(record_parent, 'Field_Binary')
                     name_elt = self.create_sub_element(field_binary_elt, 'name', text=fields[i_field])
-                    field_location_elt = self.create_sub_element(field_binary_elt, 'field_location', text=str(field_location))
+                    field_location_elt = self.create_sub_element(field_binary_elt, 'field_location', text=str(field_location), keys={'unit': 'byte'})
                     data_type_elt = self.create_sub_element(field_binary_elt, 'data_type', text=this_data_type)
-                    field_length_elt = self.create_sub_element(field_binary_elt, 'field_length', text=str(this_fieldsize))
+                    field_length_elt = self.create_sub_element(field_binary_elt, 'field_length', text=str(this_fieldsize), keys={'unit': 'byte'})
                     
                     
                     if this_offset != 0:
