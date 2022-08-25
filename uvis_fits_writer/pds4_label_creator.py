@@ -448,7 +448,7 @@ class PDS4LabelCreator(object):
                 this_groups = 0 if this_fields else np.prod(s[0:i_dim_idl+1]) # TODO: double check the +1
                 this_group_length = this_fieldsize * np.prod(s[0:i_dim_idl+1])
         
-                if s[i_dim_idl] <= 1: # If we are a scalar or singleton array dimension, don't print the group header
+                if (s[i_dim_idl] <= 1) and not d.dtype.name.startswith('str') : # If we are a scalar or singleton array dimension, don't print the group header
                     field_location = field_pos[i_field]
                 else: #is scalar else not scalar
                     # Print a group descriptor
