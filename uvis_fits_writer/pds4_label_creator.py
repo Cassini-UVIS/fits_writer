@@ -145,7 +145,7 @@ class PDS4LabelCreator(object):
         return self.primary_hdu.header.cards['MISSION'].value
     
     def get_target_name(self):
-        return self.primary_hdu.header.cards['TRGTNAME'].value
+        return self.primary_hdu.header.cards['TRGTNAME'].value.title()
         
     def get_product_lid(self):
         '''
@@ -262,7 +262,7 @@ class PDS4LabelCreator(object):
         facet1 = self.create_sub_element(science_facets, 'facet1', text='Structure')
         
         investigation_area = self.create_sub_element(observation_area, 'Investigation_Area')
-        name = self.create_sub_element(investigation_area, 'name', text='IUVS')
+        name = self.create_sub_element(investigation_area, 'name', text='UVIS') # TODO: Dynamically set this based on mission/instrument.
         type_ = self.create_sub_element(investigation_area, 'type', text='Mission')
         
         internal_reference = self.create_sub_element(investigation_area, 'Internal_Reference')
@@ -288,7 +288,7 @@ class PDS4LabelCreator(object):
         name = self.create_sub_element(observing_system_component, 'name', 
                                        text=self.get_spacecraft())
         type = self.create_sub_element(observing_system_component, 'type', 
-                                       text='Spacecraft')
+                                       text='Host')
         internal_reference = self.create_sub_element(observing_system_component, 'Internal_Reference')
         lid_reference = self.create_sub_element(internal_reference, 'lid_reference', 
                                                 text=self.get_observing_system_spacecraft_lid())
@@ -299,7 +299,7 @@ class PDS4LabelCreator(object):
         name = self.create_sub_element(target_identification, 'name', 
                                        text=self.get_target_name())
         type = self.create_sub_element(target_identification, 'type', 
-                                       text='TODO') # TODO: We need a way to get the target type.
+                                       text='Satellite') # TODO: We need a way to get the target type dynamically.  For a moon, set to "Satellite".
         internal_reference = self.create_sub_element(target_identification, 'Internal_Reference')
         lid_reference = self.create_sub_element(internal_reference, 'lid_reference', 
                                                 text=self.get_target_lid())
