@@ -216,20 +216,20 @@ class PDS4LabelCreator(object):
         # Create <Identification_Area> tag -------------------------------------
         identification_area = self.create_sub_element(self.xml_root, 'Identification_Area')
         
-        logical_identifier = self.create_sub_element(identification_area, 'logical_identifier', 
+        self.create_sub_element(identification_area, 'logical_identifier', 
                                            text=self.get_product_lid())
         
-        version_id = self.create_sub_element(identification_area, 'version_id', 
+        self.create_sub_element(identification_area, 'version_id', 
                                              text = str(self.primary_hdu.header.cards['VERSION'].value))
         
-        title = self.create_sub_element(identification_area, 'title', 
+        self.create_sub_element(identification_area, 'title', 
                                         text = self.primary_hdu.header.cards['MISSION'].value + ' ' + \
                                         self.primary_hdu.header.cards['INSTRUME'].value)
                      
-        information_model_version = self.create_sub_element(identification_area, 'information_model_version', 
+        self.create_sub_element(identification_area, 'information_model_version', 
                                                             text = self.information_model_version)
         
-        product_class = self.create_sub_element(identification_area, 'product_class', 
+        self.create_sub_element(identification_area, 'product_class', 
                                                 text = self.xml_root.tag)
         
         self.get_modification_history(identification_area)
@@ -240,74 +240,74 @@ class PDS4LabelCreator(object):
         observation_area = self.create_sub_element(self.xml_root, 'Observation_Area')
         
         time_coordinates = self.create_sub_element(observation_area, 'Time_Coordinates')
-        start_date_time = self.create_sub_element(time_coordinates, 'start_date_time',
+        self.create_sub_element(time_coordinates, 'start_date_time',
                                                   text = self.format_time_stamp(self.primary_hdu.header['OBS_UTC']))
-        stop_date_time = self.create_sub_element(time_coordinates, 'stop_date_time', 
+        self.create_sub_element(time_coordinates, 'stop_date_time', 
                                                  text=self.format_time_stamp(self.primary_hdu.header['END_UTC']))
         
         primary_result_summary = self.create_sub_element(observation_area, 'Primary_Result_Summary')
-        purpose = self.create_sub_element(primary_result_summary, 'purpose', 
+        self.create_sub_element(primary_result_summary, 'purpose', 
                                           text = 'Science')
-        processing_level = self.create_sub_element(primary_result_summary, 'processing_level', 
+        self.create_sub_element(primary_result_summary, 'processing_level', 
                                                    text=self.pds_product_level)
         
         science_facets = self.create_sub_element(primary_result_summary,'Science_Facets')
-        wavelength_range = self.create_sub_element(science_facets, 'wavelength_range', 
+        self.create_sub_element(science_facets, 'wavelength_range', 
                                                    text='Ultraviolet')
-        domain = self.create_sub_element(science_facets, 'domain', 
+        self.create_sub_element(science_facets, 'domain', 
                                          text = 'Atmosphere') # TODO: Need to be able to set this for other types of observations.
-        discipline_name = self.create_sub_element(science_facets, 'discipline_name', 
+        self.create_sub_element(science_facets, 'discipline_name', 
                                                   text='Atmospheres') # TODO: Need to be able to set this for other types of observations.
         
-        facet1 = self.create_sub_element(science_facets, 'facet1', text='Structure')
+        self.create_sub_element(science_facets, 'facet1', text='Structure')
         
         investigation_area = self.create_sub_element(observation_area, 'Investigation_Area')
-        name = self.create_sub_element(investigation_area, 'name', text='UVIS') # TODO: Dynamically set this based on mission/instrument.
-        type_ = self.create_sub_element(investigation_area, 'type', text='Mission')
+        self.create_sub_element(investigation_area, 'name', text='UVIS') # TODO: Dynamically set this based on mission/instrument.
+        self.create_sub_element(investigation_area, 'type', text='Mission')
         
         internal_reference = self.create_sub_element(investigation_area, 'Internal_Reference')
-        lid_reference = self.create_sub_element(internal_reference, 'lid_reference', 
+        self.create_sub_element(internal_reference, 'lid_reference', 
                                                 text=self.get_investigation_area_lid())
-        reference_type = self.create_sub_element(internal_reference, 'reference_type', 
+        self.create_sub_element(internal_reference, 'reference_type', 
                                                  text='data_to_investigation')
         
         observing_system = self.create_sub_element(observation_area, 'Observing_System')
-        name = self.create_sub_element(observing_system, 'name', 
+        self.create_sub_element(observing_system, 'name', 
                                        text=self.get_spacecraft())
         observing_system_component = self.create_sub_element(observing_system, 'Observing_System_Component') # Instrument
-        name = self.create_sub_element(observing_system_component, 'name', 
+        self.create_sub_element(observing_system_component, 'name', 
                                        text=self.get_instrument())
-        type = self.create_sub_element(observing_system_component, 'type', 
+        self.create_sub_element(observing_system_component, 'type', 
                                        text='Instrument')
         internal_reference = self.create_sub_element(observing_system_component, 'Internal_Reference')
-        lid_reference = self.create_sub_element(internal_reference, 'lid_reference', 
+        self.create_sub_element(internal_reference, 'lid_reference', 
                                                 text=self.get_observing_system_instrument_lid())
-        reference_type = self.create_sub_element(internal_reference, 'reference_type',
+        self.create_sub_element(internal_reference, 'reference_type',
                                                  text='is_instrument')
         observing_system_component = self.create_sub_element(observing_system, 'Observing_System_Component') # Spacecraft
-        name = self.create_sub_element(observing_system_component, 'name', 
+        self.create_sub_element(observing_system_component, 'name', 
                                        text=self.get_spacecraft())
-        type = self.create_sub_element(observing_system_component, 'type', 
+        self.create_sub_element(observing_system_component, 'type', 
                                        text='Host')
         internal_reference = self.create_sub_element(observing_system_component, 'Internal_Reference')
-        lid_reference = self.create_sub_element(internal_reference, 'lid_reference', 
+        self.create_sub_element(internal_reference, 'lid_reference', 
                                                 text=self.get_observing_system_spacecraft_lid())
-        reference_type = self.create_sub_element(internal_reference, 'reference_type',
+        self.create_sub_element(internal_reference, 'reference_type',
                                                  text='is_instrument_host')
         
         target_identification = self.create_sub_element(observation_area, 'Target_Identification')
-        name = self.create_sub_element(target_identification, 'name', 
+        self.create_sub_element(target_identification, 'name', 
                                        text=self.get_target_name())
-        type = self.create_sub_element(target_identification, 'type', 
+        self.create_sub_element(target_identification, 'type', 
                                        text='Satellite') # TODO: We need a way to get the target type dynamically.  For a moon, set to "Satellite".
         internal_reference = self.create_sub_element(target_identification, 'Internal_Reference')
-        lid_reference = self.create_sub_element(internal_reference, 'lid_reference', 
+        self.create_sub_element(internal_reference, 'lid_reference', 
                                                 text=self.get_target_lid())
-        reference_type = self.create_sub_element(internal_reference, 'reference_type',
+        self.create_sub_element(internal_reference, 'reference_type',
                                                  text='data_to_target')
         
         # TODO: May need to add information here
-        discipline_area = self.create_sub_element(observation_area, 'Discipline_Area')
+        self.create_sub_element(observation_area, 'Discipline_Area')
         
         # End <Observation_Area> tag -------------------------------------------
         
@@ -454,19 +454,19 @@ class PDS4LabelCreator(object):
                     # Print a group descriptor
                     field_location = 1
                     group_field_binary = self.create_sub_element(record_parent, 'Group_Field_Binary')
-                    repetitions = self.create_sub_element(group_field_binary, 'repetitions', text=str(s[i_dim_idl]))
+                    self.create_sub_element(group_field_binary, 'repetitions', text=str(s[i_dim_idl]))
                     group_location = field_pos[i_field] if i_dim_pds == 0 else 1
                     n_group_fields = 1 if i_dim_idl == 0 else 0
                     n_group_groups = 1 - n_group_fields
-                    fields_elt = self.create_sub_element(group_field_binary, 'fields', text=str(n_group_fields))
-                    groups_elt = self.create_sub_element(group_field_binary, 'groups', text=str(n_group_groups))
+                    self.create_sub_element(group_field_binary, 'fields', text=str(n_group_fields))
+                    self.create_sub_element(group_field_binary, 'groups', text=str(n_group_groups))
                     
-                    group_location_elt = self.create_sub_element(group_field_binary, 'group_location', 
+                    self.create_sub_element(group_field_binary, 'group_location', 
                                                              text=str(group_location), 
                                                              keys={'unit': 'byte'})
                     
                     group_length = np.prod(s[0:i_dim_idl+1]) * this_fieldsize
-                    group_length_elt = self.create_sub_element(group_field_binary, 'group_length', 
+                    self.create_sub_element(group_field_binary, 'group_length', 
                                                              text=str(group_length), 
                                                              keys={'unit': 'byte'})
                     
@@ -482,14 +482,14 @@ class PDS4LabelCreator(object):
                         this_data_type = self.type_map[d.dtype.name]['name']
                     
                     field_binary_elt = self.create_sub_element(record_parent, 'Field_Binary')
-                    name_elt = self.create_sub_element(field_binary_elt, 'name', text=fields[i_field])
-                    field_location_elt = self.create_sub_element(field_binary_elt, 'field_location', text=str(field_location), keys={'unit': 'byte'})
-                    data_type_elt = self.create_sub_element(field_binary_elt, 'data_type', text=this_data_type)
-                    field_length_elt = self.create_sub_element(field_binary_elt, 'field_length', text=str(this_fieldsize), keys={'unit': 'byte'})
+                    self.create_sub_element(field_binary_elt, 'name', text=fields[i_field])
+                    self.create_sub_element(field_binary_elt, 'field_location', text=str(field_location), keys={'unit': 'byte'})
+                    self.create_sub_element(field_binary_elt, 'data_type', text=this_data_type)
+                    self.create_sub_element(field_binary_elt, 'field_length', text=str(this_fieldsize), keys={'unit': 'byte'})
                     
                     
                     if this_offset != 0:
-                        value_offset_elt = self.create_sub_element(field_binary_elt, 'value_offset', text=str(this_offset))
+                        self.create_sub_element(field_binary_elt, 'value_offset', text=str(this_offset))
                         
             # Set the new parent
             record_parent = record_binary_grp
