@@ -22,7 +22,7 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
     This class defines a PDS4 label for a document.
     '''
     
-    def __init__(self, xml_template, fits_file, output_dir=Path('.')):
+    def __init__(self, xml_template, fits_file, document_file, output_dir=Path('.')):
         '''
         Constructor
         '''
@@ -35,10 +35,17 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
         self.hdu_list = fits.open(self.fits_file)
         self.primary_hdu = self.hdu_list['PRIMARY']
         
+        self.document_file = document_file
+        
         if 'plot' in xml_template.name:
             self.doc_type = 'plot'
+            if 'eps' in xml_template.name:
+                self.file_extention = '.eps'
+            if 'png' in xml_template.name:
+                self.file_extention = '.png'
         else: # animation
             self.doc_type = 'animation'
+            self.file_extention = '.mp4'
         
         # Get the preamble ready
         self.get_xml_preamble()
@@ -57,19 +64,18 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
             if elem.tag.endswith('logical_identifier'):
                 # Here we need to append the file name to the ID.
                 parts = elem.text.split(':')
-                parts[-1] = fits_file.name[:-5].lower()
-                elem.text = ':'.join(parts) + '_' + self.doc_type
+                parts[-1] = self.document_file.name[:-4].lower().replace('-', '_')
+                elem.text = ':'.join(parts)
             if elem.tag.endswith('title'):
                 # Modify the title.
-                elem.text = elem.text + fits_file.name[:-5]
+                elem.text = elem.text + self.fits_file.name[:-5].replace('-', '_')
             if elem.tag.endswith('Citation_Information'):
                 # Citation information.  Use the current year in UTC.
                 for elem2 in elem.iter():
                     if elem2.tag.endswith('publication_year'):
                         elem2.text = str(datetime.utcnow().year)
-                    if self.doc_type == 'plot':
-                        if elem2.tag.endswith('description'):
-                            elem2.text = elem2.text + fits_file.name[:-5]
+                    if elem2.tag.endswith('description'):
+                        elem2.text = elem2.text + self.fits_file.name[:-5].replace('-', '_')
             if elem.tag.endswith('Modification_History'):
                 # Mod history.  In this case, use the current year-month-day.
                 for elem2 in elem.iter():
@@ -87,11 +93,11 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
             if elem.tag.endswith('Reference_List'):
                 for elem2 in elem.iter():
                     if elem2.tag.endswith('lid_reference'):
-                        elem2.text = elem2.text + fits_file.name[:-5].lower()
+                        elem2.text = elem2.text + self.fits_file.name[:-5].lower().replace('-', '_')
             if elem.tag.endswith('}Document'): # The } is necessary here so it doesn't confuse with 'Product Document'
                 for elem2 in elem.iter():
                     if elem2.tag.endswith('document_name'):
-                        elem2.text = elem2.text + fits_file.name[:-5]
+                        elem2.text = elem2.text + self.fits_file.name[:-5].replace('-', '_')
                     if elem2.tag.endswith('copyright'):
                         elem2.text = str(datetime.utcnow().year)
                     if elem2.tag.endswith('publication_date'):
@@ -100,10 +106,9 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
                             str(datetime.utcnow().month) + "-" + \
                             str(datetime.utcnow().day) + "Z"
                     if elem2.tag.endswith('description'):
-                        elem2.text = elem2.text + fits_file.name[:-5]
+                        elem2.text = elem2.text + self.fits_file.name[:-5].replace('-', '_')
                     if elem2.tag.endswith('file_name'):
-                        elem2.text = fits_file.name[:-5] + '.eps'
-        
+                        elem2.text = self.document_file.name[:-4] + self.file_extention
         
         # root = self.xml_root.getroot()
         # elt = root.find('//{' + ns + '}Product_Document')
@@ -121,17 +126,29 @@ if __name__ == '__main__':
     if not output_dir.exists():
         output_dir.mkdir()
     template_dir = Path('..') / 'templates'
-    xml_template = template_dir / 'titan_plot_template.xml'
+    xml_template = template_dir / 'titan_plot_template_eps.xml'
     fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
     label_file = output_dir / ('documentxml_' + fits_file.name[:-5] + '_plot.xml')
     
-    label_creator = PDS4TitanDocumentLabelCreator(xml_template, fits_file)
+    # eps
+    document_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_plot.eps'
+    label_creator = PDS4TitanDocumentLabelCreator(xml_template, fits_file, document_file)
     label_creator.create_pds4_label()
-    label_creator.write_to_file(label_file)
+    label_creator.write_to_file(document_file.name[:-4] + '.xml')
     
+    # png
+    xml_template = template_dir / 'titan_plot_template_png.xml'
+    label_file = output_dir / ('documentxml_' + fits_file.name[:-5] + '.xml')
+    document_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_animation_frame_000.png'
+    label_creator = PDS4TitanDocumentLabelCreator(xml_template, fits_file, document_file)
+    label_creator.create_pds4_label()
+    label_creator.write_to_file(document_file.name[:-4] + '.xml')
+    
+    # mp4
+    document_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_animation.mp4'
     xml_template = template_dir / 'titan_animation_template.xml'
     label_file = output_dir / ('documentxml_' + fits_file.name[:-5] + '_animation.xml')
-    label_creator = PDS4TitanDocumentLabelCreator(xml_template, fits_file)
+    label_creator = PDS4TitanDocumentLabelCreator(xml_template, fits_file, document_file)
     label_creator.create_pds4_label()
-    label_creator.write_to_file(label_file)
+    label_creator.write_to_file(document_file.name[:-4] + '.xml')
         
