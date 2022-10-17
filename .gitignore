@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 /data/
 /spice/
+/output/
+.DS_Store
+.project
+.pydevproject

@@ -9,48 +9,22 @@ from astropy.io import fits
 from pathlib import Path
 import numpy as np
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
 import csv
 import pandas
+from uvis_fits_writer.pds4_label_base import PDS4Label
 
-class PDS4LabelCreator(object):
+class PDS4LabelCreator(PDS4Label):
     '''
     This class defines a PDS4 label given a FITS file data product. 
     '''
-    
-    # Note: The FITS standard specifies MSB, i.e. big-endian, for ALL data types.
-    type_map = {
-        # Unsigned int types
-        'uint8':   {'name':'UnsignedByte', 'size':1, 'offset':0},
-        'uint16':  {'name':'UnsignedMSB2', 'size':2, 'offset':0},
-        'uint32':  {'name':'UnsignedMSB4', 'size':4, 'offset':0},
-        'uint64':  {'name':'UnsignedMSB8', 'size':8, 'offset':0},
-        
-        # Signed int types 
-        'int8':    {'name':'SignedByte', 'size':1, 'offset':0},
-        'int16':   {'name':'SignedMSB2', 'size':2, 'offset':int("8000", 16)},
-        'int32':   {'name':'SignedMSB4', 'size':4, 'offset':int("80000000", 16)},
-        'int64':   {'name':'SignedMSB8', 'size':8, 'offset':int("8000000000000000", 16)},
-        
-        # Float types
-        'float32':  {'name':'IEEE754MSBSingle', 'size':4, 'offset':0},
-        'float64': {'name':'IEEE754MSBDouble', 'size':8, 'offset':0},
-        
-        # String types
-        'string': {'name':'ASCII_String', 'size':1, 'offset':0}
-        }
     
     def __init__(self, fits_file, template_file, data_product_level='1A'):
         '''
         Constructor
         '''
         
-        # TODO: Check which schema version numbers we should be using.
-        # These versions listed below are the most current on the PDS website:
-        # https://pds.nasa.gov/datastandards/dictionaries/index-1.18.0.0.shtml
-        self.schema_version = '1I00'
-        self.schema_disp_ver = '1I00_1510'
-        self.information_model_version = '1.16.0.0'
+        # Call superclass constructor.
+        super().__init__()
         
         # Data Product Level
         # TODO: Check with team on the proper data product levels.
@@ -68,31 +42,6 @@ class PDS4LabelCreator(object):
         # Get the template information:
         self.template = pandas.read_excel(str(template_file), 
                                           sheet_name=['L2A_product_definition', 'HDU Descriptions'])
-        print('test')
-    
-    def get_xml_preamble(self):        
-        # Read the XML preamble:
-        # TODO: There has to be a better way to add these via the ElementTree library
-        #     At present all I can find is a way to add the first line via the
-        #     xml_declaration=True keyword.  But the others I'm not sure.
-        preamble_file = Path('..') / 'pds' / 'xml_preamble.xml'
-        with open(preamble_file, 'r') as f:
-            self.preable_content = f.read()
-    
-    def create_xml_root(self): # pds4_xml_model:
-        # TODO: Collections, Bundles, etc.
-        self.xml_root = ET.Element('Product_Observational', 
-                {
-                    'xmlns': 'http://pds.nasa.gov/pds4/pds/v1',
-                    'xmlns:pds': 'http://pds.nasa.gov/pds4/pds/v1',
-                    'xmlns:disp': 'http://pds.nasa.gov/pds4/disp/v1',
-                    'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-                    'xsi:schemaLocation': 'http://pds.nasa.gov/pds4/pds/v1      ' + \
-                        'http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_1G00.xsd     ' + \
-                        'https://pds.nasa.gov/pds4/disp/v1      ' + \
-                        'https://pds.nasa.gov/pds4/disp/v1/PDS4_DISP_1G00_1500.xsd'
-                }
-            )
         
     def get_pds_product_level(self, level, pds=False):
         '''
@@ -186,13 +135,6 @@ class PDS4LabelCreator(object):
         '''
         lid = 'urn:nasa:pds:context:target:satellite.saturn.titan'
         return lid
-        
-    def format_time_stamp(self, time_stamp):
-        '''
-        The PDS requires the time stamp to be in ISO8601 format, UTC time zone.
-        TODO: check on the number of decimal places allowed.
-        '''
-        return time_stamp[:24] + 'Z'
     
     def create_sub_element(self, parent, name, keys=None, text=None):
         if keys is not None:
@@ -203,7 +145,7 @@ class PDS4LabelCreator(object):
             child.text = text
         return child
     
-    def create_pds4_label(self, output_file):
+    def create_pds4_label(self):
 
         # Get the size of the primary HDU image, if present.
         have_primary = self.primary_hdu.data is not None
@@ -494,18 +436,6 @@ class PDS4LabelCreator(object):
             # Set the new parent
             record_parent = record_binary_grp
     
-    def write_to_file(self):        
-        # Prettify the XML string
-        xmlstr = ET.tostring(self.xml_root, encoding='utf-8', xml_declaration=None)
-        xmlstr = minidom.parseString(xmlstr).toprettyxml(indent='\t')
-        
-        # Replace generic preamble with the one we want.
-        # TODO: There has got to be a better way to do this:
-        xmlstr = xmlstr.replace('<?xml version="1.0" ?>', self.preable_content)
-        
-        with open(label_file, 'w') as f:
-            f.write(xmlstr)
-    
 if __name__ == '__main__':
     
     data_dir = Path('..') / 'data'
@@ -515,8 +445,8 @@ if __name__ == '__main__':
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
     
     label_creator = PDS4LabelCreator(fits_file, template_file)
-    label_creator.create_pds4_label(label_file)
-    label_creator.write_to_file()
+    label_creator.create_pds4_label()
+    label_creator.write_to_file(label_file)
     
     hdu_list = fits.open(fits_file)
     hdu_list.info()
