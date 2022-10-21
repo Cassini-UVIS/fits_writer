@@ -4,7 +4,7 @@
   <Identification_Area>
     <logical_identifier>urn:nasa:pds:cassini-uvis_titan-library:document:file</logical_identifier>
     <version_id>1.0</version_id>
-    <title>Average spectra for observation </title>
+    <title>Average snapshot for observation </title>
     <information_model_version>1.16.0.0</information_model_version>
     <product_class>Product_Document</product_class>
     <Citation_Information>
@@ -71,12 +71,12 @@
   </Reference_List>
   <Document>
     <revision_id>1.0</revision_id>
-    <document_name>Average spectra for observation </document_name>
+    <document_name>Geometry snapshot for observation </document_name>
     <author_list>Royer, Emilie</author_list>
     <copyright>2022</copyright>
     <publication_date>2022-01-27</publication_date>
     <document_editions>1</document_editions>
-    <description>Associated plot of the average spectra for observation </description>
+    <description>Snapshot of an MP4 animation of the geometry, showing the motion of the Cassini-UVIS slit across Titan's disk for observation </description>
     <Document_Edition>
       <edition_name>first edition</edition_name>
       <language>English</language>
