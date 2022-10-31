@@ -84,7 +84,7 @@ class PDS4Label(ABC):
     def write_to_file(self, output_file):      
         # https://stackoverflow.com/a/14493981/2313806
         def pretty_print(data):
-            return '\r\n'.join([line for line in minidom.parseString(data).toprettyxml(indent='  ').split('\n') if line.strip()])
+            return '\n'.join([line for line in minidom.parseString(data).toprettyxml(indent='  ').split('\n') if line.strip()])
           
         # Prettify the XML string
         xmlstr = ET.tostring(self.xml_root, encoding='utf-8', xml_declaration=None)
