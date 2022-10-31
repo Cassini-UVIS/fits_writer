@@ -84,7 +84,7 @@
       <Document_File>
         <file_name></file_name>
         <local_identifier>document-file</local_identifier>
-        <document_standard_id>MP4</document_standard_id>
+        <document_standard_id>MPEG-4</document_standard_id>
         <!-- Standard ID: PDF/A, PNG, MPEG-4, 7-bit ASCII Text, Encapsulated Postscript -->
       </Document_File>
     </Document_Edition>
