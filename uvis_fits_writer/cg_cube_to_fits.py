@@ -22,6 +22,26 @@ from datetime import datetime
 import pvl
 from spiceypy import spiceypy as cspice
 import subprocess
+from planetarypy.spice.kernels import list_kernels_for_day
+
+# TODO: Move this to a general spice function library.
+def get_orbit_number(sclk_time):
+    spice_dir = Path('..') / 'kernels'
+    orb_file = spice_dir / 'orb' / 'cas_v40.orb'
+    orb_numbers = []
+    orb_sclk_times = []
+    with open(orb_file) as file:
+        lines = file.readlines()[2:]
+        for line in lines:
+            parts = [p for p in line.split(' ') if p != '']
+            orb_numbers.append(np.int(parts[0]))
+            orb_sclk_times.append(np.double(parts[5].split('/')[1]))
+            
+    orb_numbers = np.array(orb_numbers)
+    orb_sclk_times = np.array(orb_sclk_times)
+    
+    w = np.where(sclk_time >= orb_sclk_times)
+    return orb_numbers[w[0][-1]]
 
 def cassini_uvis_euv_wavelengths(xbin):
     '''
@@ -265,6 +285,7 @@ class CGCubeToFITS(object):
         :type overwrite:         boolean
         '''
         self.factory.write_to_file(output_file, overwrite=overwrite)
+        
        
     def populate_primary_header(self, hdu, cube_file, pds_label_file):
         '''
@@ -329,11 +350,14 @@ class CGCubeToFITS(object):
         values.append(1.0)
         
         #TODO: Get ORBNUM dynamically.  For now, this is just an example.
+        sclk_time = np.double(pds_label['SPACECRAFT_CLOCK_START_COUNT'].split('/')[-1])
+        orbit_number = get_orbit_number(sclk_time)
         names.append('ORBNUM')
-        values.append(208)
+        values.append(orbit_number)
         
         for name, value in zip(names, values):
             hdu.header[name] = value
+            
             
 class TitanCubeToFITS(CGCubeToFITS):
     '''
@@ -452,7 +476,7 @@ class TitanCubeToFITS(CGCubeToFITS):
         # Unload kernels
         cspice.kclear()
     
-def get_kernels_for_day(yyyy, doy, spice_dir):
+def get_kernels_for_day(year, doy, spice_dir):
     '''
     Function to retrieve the spice kernels for a particular day.
     
@@ -463,7 +487,7 @@ def get_kernels_for_day(yyyy, doy, spice_dir):
     
     # Run IDL to get the list of kernels, dumping output to a temp directory
     idl_path_cmd = "!path = !path + ':" + str(Path.home() / "git" / "cassini-uvis-tools" / "kernel_finder") + "'"
-    idl_kernel_cmd = "cassini_spice_kernel_list, " + str(yyyy) + ", " + str(doy) + \
+    idl_kernel_cmd = "cassini_spice_kernel_list, " + str(year) + ", " + str(doy) + \
         ", fkernel_cg, fkernel, kernel_list, LOCAL_KERNEL_PATH='" + str(spice_dir) + "/'"
     idl_cmd = '/Applications/harris/envi56/idl88/bin/idl -e "' + idl_path_cmd + \
         ' & ' + idl_kernel_cmd + '"'
@@ -474,11 +498,21 @@ def get_kernels_for_day(yyyy, doy, spice_dir):
     w = np.where('*****************************************************' == kernel_list)[0]
     kernel_list = kernel_list[w[0]+6:w[1]-1]
     
+    
+    # Call PlanetaryPy kernel finder.
+    # year_doy = str(year) + '-' + str(doy)
+    # kernels = list_kernels_for_day('cassini', year_doy, year_doy)
+    # kernels = [kernel for kernel in kernels if not (kernel.endswith('.ti') and not 'uvis' in kernel)]
+    
+    
     # return the list of kernel files.  We don't need the files themselves,
     # only the list for the metadata.
     return kernel_list
     
 if __name__ == '__main__':
+    
+    # orb_num = get_orbit_number(1871614519.013)
+    # print(orb_num)
     
     spice_dir = Path('..') / 'spice'
     
