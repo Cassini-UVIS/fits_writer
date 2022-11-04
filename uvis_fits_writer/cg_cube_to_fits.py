@@ -132,15 +132,6 @@ class CGCubeToFITS(object):
         :type pds_label_file:    pathLib.Path object.
         :param kernel_list:      List of kernel files used (for metadata purposes).
         :type kernel_list:       List of strings.
-        
-        TODO: Fields that are not present in the original cube:
-            NUMBER_OF_SAMPLES
-            OBS_SECONDS
-            OBS_TICKS
-        
-            Fields present in the spreadsheet, not in the cube
-            PIXEL_CENTER_OCCULTATION_LATITUDE
-            PIXEL_CENTER_OCCULTATION_LONGITUDE
         '''
         
         # Create the template factory
@@ -192,7 +183,9 @@ class CGCubeToFITS(object):
                                                  (0,1), (1,0))
                         new_data[:, hdu_number-1] = value.squeeze()
                 elif hdu_name == 'CAL':
-                    pass # TODO: The cal matrix has dimensions of (1, 20, 10240, 64)?
+                    cube_data = hdu_list[hdu_number].data[cg_field_name][0, 0, :1024, :].squeeze()
+                    new_data[0, :, :] = cube_data
+                    print(new_data)
                 elif hdu_name == 'TARGET_GEOM':
                     for hdu_number in (1, 2, 3):
                         cube_shape = hdu_list[hdu_number].data[cg_field_name].shape
@@ -245,6 +238,34 @@ class CGCubeToFITS(object):
             # Kernel files
             if kernel_list is not None:
                 self.populate_kernels_hdu(kernel_list)
+                
+        # Add obs_tick and obs_seconds information.
+        self.set_obs_time(pds_label_file)
+        
+        # Set number of samples (readouts)
+        self.set_number_of_samples()
+        
+    def set_obs_time(self, pds_label_file):
+        '''
+        Note that the sclk time is formatted in the following way:
+        1/1609504792.123
+        Where the "1" indicates the partition.  The number after the slash indicates
+        the number of seconds.  And then after the period, it's the number of
+        ticks, i.e. 1/256 of a second.
+        '''
+        pds_label = pvl.load(pds_label_file)
+        sclk_time = pds_label['SPACECRAFT_CLOCK_START_COUNT'].split('/')[1]
+        parts = sclk_time.split('.')
+        seconds = parts[0]
+        sub_seconds = parts[1]
+        self.new_hdu_list['CONFIG'].data['OBS_SECONDS'] = seconds
+        self.new_hdu_list['CONFIG'].data['OBS_TICKS'] = sub_seconds
+    
+    def set_number_of_samples(self):
+        # Get the time from the header
+        ephemeris_time = self.new_hdu_list['TIME'].data['TIME_ET']
+        NZ = ephemeris_time.shape[0]
+        self.new_hdu_list['CONFIG'].data['NUMBER_OF_SAMPLES'] = NZ
             
     def populate_kernels_hdu(self, kernel_list):
         '''
@@ -285,7 +306,6 @@ class CGCubeToFITS(object):
         :type overwrite:         boolean
         '''
         self.factory.write_to_file(output_file, overwrite=overwrite)
-        
        
     def populate_primary_header(self, hdu, cube_file, pds_label_file):
         '''
@@ -349,7 +369,6 @@ class CGCubeToFITS(object):
         names.append('VERSION')
         values.append(1.0)
         
-        #TODO: Get ORBNUM dynamically.  For now, this is just an example.
         sclk_time = np.double(pds_label['SPACECRAFT_CLOCK_START_COUNT'].split('/')[-1])
         orbit_number = get_orbit_number(sclk_time)
         names.append('ORBNUM')
@@ -383,14 +402,6 @@ class TitanCubeToFITS(CGCubeToFITS):
         :param kernel_list:      List of kernel files used (for metadata purposes).
         :type kernel_list:       List of strings.
         
-        TODO: Fields that are not present in the original cube:
-            NUMBER_OF_SAMPLES
-            OBS_SECONDS
-            OBS_TICKS
-        
-            Fields present in the spreadsheet, not in the cube
-            PIXEL_CENTER_OCCULTATION_LATITUDE
-            PIXEL_CENTER_OCCULTATION_LONGITUDE
         '''
         
         # Call the superclass method to set up the FITS file general HDUs
