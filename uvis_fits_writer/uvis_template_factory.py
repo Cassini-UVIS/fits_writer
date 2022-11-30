@@ -155,7 +155,6 @@ class UVISFitsTemplateFactory(object):
                 
             data[field_name] = value
             
-            # TODO: Find a way to add this to the TTYPE* lines instead
             header['COMMENT'] = field_name + ' : ' + rows['COMMENT'][row]
   
         # Convert to binary table object.

@@ -297,8 +297,13 @@ class PDS4LabelCreator(PDS4Label):
         field_size = np.zeros((n_fields,), dtype=np.uint64)
         for i in range(n_fields):
             d = data[fields[i]][0]
+            
             if hdu.name == 'DATA':
                 print("shape of " + fields[i], d.shape)
+                
+            if hdu.name == 'KERNELS' and type(d) == str:
+                d = np.array([d])
+            
             this_n_fields = d.size
             if d.dtype.name.startswith('str'):
                 size = np.max(np.char.str_len(data[fields[i]]))
@@ -363,6 +368,10 @@ class PDS4LabelCreator(PDS4Label):
         record_parent = record_binary_grp
         for i_field in range(n_fields):
             d = data[fields[i_field]][0]
+            
+            if hdu.name == 'KERNELS' and type(d) == str:
+                d = np.array([d])
+            
             if d.size > 1:
                 d = d.squeeze()
             
@@ -439,8 +448,13 @@ class PDS4LabelCreator(PDS4Label):
 if __name__ == '__main__':
     
     data_dir = Path('..') / 'data'
-    fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
-    label_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.xml'
+    
+    # fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
+    # label_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.xml'
+    
+    fits_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.fits'
+    label_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.xml'
+    
     template_dir = Path('..') / 'templates'
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
     

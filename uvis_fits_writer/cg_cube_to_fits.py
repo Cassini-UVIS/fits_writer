@@ -288,13 +288,38 @@ class CGCubeToFITS(object):
         table = Table(self.new_hdu_list['KERNELS'].data)
         name = self.new_hdu_list['KERNELS'].name
         header = self.new_hdu_list['KERNELS'].header
+        
+        # Scoop out everything but the comments, otherwise the old
+        # dimensions will persist, creating bad file pointers.
+        comments = [c for c in header.cards if c[0] == 'COMMENT']
+        
+        # Pop the placeholder Kernels table, so we can make a new one.
+        self.new_hdu_list.pop('KERNELS')
+        
+        cols = []
         for key, value in map.items():
+            
             w = np.flatnonzero(np.core.defchararray.find(kernels, value) != -1)
-            ks = np.transpose(kernels[w])
-            n = len(ks)
-            new_kernel_array = np.reshape(ks, (1, n))
-            table.replace_column(key, new_kernel_array)
-        self.new_hdu_list['KERNELS'] = fits.BinTableHDU(table, name=name, header=header)
+            
+            # Use these kernels
+            ks = kernels[w]
+            
+            # Get the max string length for this column
+            max_len = max([len(kernel) for kernel in ks])
+            
+            # Set format
+            data_format = 'A' + str(max_len)
+            
+            # Make the column objects
+            col = fits.Column(name=key, format=data_format, array=ks[:], ascii=True)
+            cols.append(col)
+            
+        # self.new_hdu_list['KERNELS'] = fits.BinTableHDU(table, name=name)
+        self.new_hdu_list.insert(7, fits.TableHDU.from_columns(cols, name=name))
+        
+        # Add the comments back in
+        for c in comments:
+            self.new_hdu_list['KERNELS'].header['COMMENT'] = c[1]
     
     def write_to_file(self, output_file, overwrite=True):
         '''
@@ -442,7 +467,7 @@ class TitanCubeToFITS(CGCubeToFITS):
         ephemeris_time = self.new_hdu_list['TIME'].data['TIME_ET']
         
         # Get the kernels
-        leap_second_kernel = spice_dir / 'lsk' / self.new_hdu_list['KERNELS'].data['LS_KRN'][0,0]
+        leap_second_kernel = spice_dir / 'lsk' / self.new_hdu_list['KERNELS'].data['LS_KRN'][0]
         planetary_constants_kernels = self.new_hdu_list['KERNELS'].data['PC_KRN']
         condition1 = np.core.defchararray.startswith(planetary_constants_kernels, 'pck')
         condition2 = np.core.defchararray.startswith(planetary_constants_kernels, 'cpck_rock')
@@ -527,7 +552,10 @@ if __name__ == '__main__':
     
     spice_dir = Path('..') / 'spice'
     
-    kernel_list = get_kernels_for_day(2014, 265, spice_dir)
+    # kernel_list = get_kernels_for_day(2014, 265, spice_dir)
+    # print(kernel_list)
+    
+    kernel_list = get_kernels_for_day(2005, 46, spice_dir)
     print(kernel_list)
     
     # Test list to avoid downloading for now.
@@ -540,12 +568,20 @@ if __name__ == '__main__':
     data_dir = Path('..') / 'data'
     template_dir = Path('..') / 'templates'
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
-    cube_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined.fits'
-    new_fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
-    label_file = data_dir / 'FUV2014_265_11_15.LBL'
     
-    detector_image_dir = data_dir / 'detector_images'
+    # cube_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined.fits'
+    # new_fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
+    # label_file = data_dir / 'FUV2014_265_11_15.LBL'
+    # detector_image_dir = data_dir / 'detector_images' / 'fuv'
+    
+    cube_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined_CGFITS.fits'
+    new_fits_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.fits'
+    label_file = data_dir / 'EUV2005_046_08_55.LBL'
+    detector_image_dir = data_dir / 'detector_images' / 'euv'
+    
     detector_image_files = [f for f in detector_image_dir.iterdir()]
+    
+    
     
     converter = TitanCubeToFITS()
     converter.convert_to_fits(template_file, cube_file, new_fits_file, label_file, 
@@ -555,57 +591,58 @@ if __name__ == '__main__':
     converter.write_to_file(new_fits_file, overwrite=True)
     
     # Now, read the data to test
-    import matplotlib.pyplot as plt
-    import matplotlib.colors as colors
-    with fits.open(new_fits_file) as hdul:
-    
-        xbin = hdul['CONFIG'].data['IMG_XBIN']
-    
-        ymin = hdul['CONFIG'].data['IMG_YMIN']
-        ymax = hdul['CONFIG'].data['IMG_YMAX']
-    
-        # utc = hdul['TIME'].data['TIME_UTC']
-        # print(utc)
-        # et = hdul['TIME'].data['TIME_ET']
-        # print(et)
-        
-        for column in hdul['KERNELS'].data.columns:
-            print(hdul['KERNELS'].data[column.name])
-            
-        print(hdul['TARGET_GEOM'].data['SATURN_LOCAL_TIME'].shape)
-        print(hdul['TARGET_GEOM'].data['SATURN_LOCAL_TIME'])
-    
-        print("ymin = " + str(ymin))
-        print("ymax = " + str(ymax))
-    
-        # Get a the UVIS data
-        data = np.squeeze(hdul['DATA'].data['UVIS_CALIBRATED'][:,0,:,:])
-        
-        # Plot the image, summed in the NZ (samples) dimension
-        dsum = np.sum(data, 0, where=(data > 0))
-        plt.imshow(dsum, norm=colors.LogNorm(vmin=0.1, vmax=dsum.max()))
-    
-        # Plot one of the detector images
-        plt.figure()
-        d = hdul['DETECTOR_IMG_FUV'].data['LYMAN_ALPHA']
-        plt.imshow(d)
-    
-        # Plot the image, summed along the wavelength dimension.
-        plt.figure()
-        dsum = np.sum(data, 1, where=(data > 0))
-        plt.imshow(dsum, norm=colors.LogNorm(vmin=0.1, vmax=dsum.max()))
-    
-        # Plot a spectrum, by summing over the NZ (sample) and NY (spatial) dimensions
-        plt.figure()
-        wavelengths = cassini_uvis_fuv_wavelengths(xbin)
-        dsum = np.sum(data, 0, where=(data > 0))
-        dsum = np.sum(dsum, 1, where=(dsum > 0))
-        plt.plot(wavelengths, dsum)
-        
-        # Plot a geometry array
-        plt.figure()
-        geo_data = hdul['FOV_GEOM'].data['RAYHEIGHT'][:,0,:].squeeze()
-        plt.imshow(geo_data)
-    
-        plt.show()
-    
+    # import matplotlib.pyplot as plt
+    # import matplotlib.colors as colors
+    # with fits.open(new_fits_file) as hdul:
+    #
+    #     xbin = hdul['CONFIG'].data['IMG_XBIN']
+    #
+    #     ymin = hdul['CONFIG'].data['IMG_YMIN']
+    #     ymax = hdul['CONFIG'].data['IMG_YMAX']
+    #
+    #     # utc = hdul['TIME'].data['TIME_UTC']
+    #     # print(utc)
+    #     # et = hdul['TIME'].data['TIME_ET']
+    #     # print(et)
+    #
+    #     for column in hdul['KERNELS'].data.columns:
+    #         print(hdul['KERNELS'].data[column.name])
+    #
+    #     print(hdul['TARGET_GEOM'].data['SATURN_LOCAL_TIME'].shape)
+    #     print(hdul['TARGET_GEOM'].data['SATURN_LOCAL_TIME'])
+    #
+    #     print("ymin = " + str(ymin))
+    #     print("ymax = " + str(ymax))
+    #
+    #     # Get a the UVIS data
+    #     data = np.squeeze(hdul['DATA'].data['UVIS_CALIBRATED'][:,0,:,:])
+    #
+    #     # Plot the image, summed in the NZ (samples) dimension
+    #     dsum = np.sum(data, 0, where=(data > 0))
+    #     plt.imshow(dsum, norm=colors.LogNorm(vmin=0.1, vmax=dsum.max()))
+    #
+    #     # Plot one of the detector images
+    #     plt.figure()
+    #     d = hdul['DETECTOR_IMG_FUV'].data['LYMAN_ALPHA']
+    #     plt.imshow(d)
+    #
+    #     # Plot the image, summed along the wavelength dimension.
+    #     plt.figure()
+    #     dsum = np.sum(data, 1, where=(data > 0))
+    #     plt.imshow(dsum, norm=colors.LogNorm(vmin=0.1, vmax=dsum.max()))
+    #
+    #     # Plot a spectrum, by summing over the NZ (sample) and NY (spatial) dimensions
+    #     plt.figure()
+    #     wavelengths = cassini_uvis_fuv_wavelengths(xbin)
+    #     dsum = np.sum(data, 0, where=(data > 0))
+    #     dsum = np.sum(dsum, 1, where=(dsum > 0))
+    #     plt.plot(wavelengths, dsum)
+    #
+    #     # Plot a geometry array
+    #     plt.figure()
+    #     geo_data = hdul['FOV_GEOM'].data['RAYHEIGHT'][:,0,:].squeeze()
+    #     plt.imshow(geo_data)
+    #
+    #     plt.show()
+    #
+
