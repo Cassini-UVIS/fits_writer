@@ -176,7 +176,7 @@ class UVISFitsTemplateFactory(object):
     
 if __name__ == '__main__':
     template_dir = Path('..') / 'templates'
-    template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
+    template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
     new_fits_file = 'test_fits_file.fits'
     factory = UVISFitsTemplateFactory()
     factory.construct_fits(template_file, n_samples=20)

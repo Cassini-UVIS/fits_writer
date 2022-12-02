@@ -567,7 +567,7 @@ if __name__ == '__main__':
     
     data_dir = Path('..') / 'data'
     template_dir = Path('..') / 'templates'
-    template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
+    template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
     
     # cube_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined.fits'
     # new_fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
@@ -591,14 +591,16 @@ if __name__ == '__main__':
     converter.write_to_file(new_fits_file, overwrite=True)
     
     # Now, read the data to test
-    # import matplotlib.pyplot as plt
-    # import matplotlib.colors as colors
-    # with fits.open(new_fits_file) as hdul:
-    #
-    #     xbin = hdul['CONFIG'].data['IMG_XBIN']
-    #
-    #     ymin = hdul['CONFIG'].data['IMG_YMIN']
-    #     ymax = hdul['CONFIG'].data['IMG_YMAX']
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as colors
+    with fits.open(new_fits_file) as hdul:
+    
+        xbin = hdul['CONFIG'].data['IMG_XBIN']
+    
+        ymin = hdul['CONFIG'].data['IMG_YMIN']
+        ymax = hdul['CONFIG'].data['IMG_YMAX']
+        
+        print(xbin)
     #
     #     # utc = hdul['TIME'].data['TIME_UTC']
     #     # print(utc)

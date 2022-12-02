@@ -456,7 +456,7 @@ if __name__ == '__main__':
     label_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.xml'
     
     template_dir = Path('..') / 'templates'
-    template_file = template_dir / 'Titan_UVIS_data_definition_v0.2.xlsx'
+    template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
     
     label_creator = PDS4LabelCreator(fits_file, template_file)
     label_creator.create_pds4_label()

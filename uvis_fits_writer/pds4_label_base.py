@@ -18,15 +18,15 @@ class PDS4Label(ABC):
     type_map = {
         # Unsigned int types
         'uint8':   {'name':'UnsignedByte', 'size':1, 'offset':0},
-        'uint16':  {'name':'UnsignedMSB2', 'size':2, 'offset':0},
-        'uint32':  {'name':'UnsignedMSB4', 'size':4, 'offset':0},
-        'uint64':  {'name':'UnsignedMSB8', 'size':8, 'offset':0},
+        'uint16':  {'name':'UnsignedMSB2', 'size':2, 'offset':int("8000", 16)},
+        'uint32':  {'name':'UnsignedMSB4', 'size':4, 'offset':int("80000000", 16)},
+        'uint64':  {'name':'UnsignedMSB8', 'size':8, 'offset':int("8000000000000000", 16)},
         
         # Signed int types 
         'int8':    {'name':'SignedByte', 'size':1, 'offset':0},
-        'int16':   {'name':'SignedMSB2', 'size':2, 'offset':int("8000", 16)},
-        'int32':   {'name':'SignedMSB4', 'size':4, 'offset':int("80000000", 16)},
-        'int64':   {'name':'SignedMSB8', 'size':8, 'offset':int("8000000000000000", 16)},
+        'int16':   {'name':'SignedMSB2', 'size':2, 'offset':0},
+        'int32':   {'name':'SignedMSB4', 'size':4, 'offset':0},
+        'int64':   {'name':'SignedMSB8', 'size':8, 'offset':0},
         
         # Float types
         'float32':  {'name':'IEEE754MSBSingle', 'size':4, 'offset':0},
