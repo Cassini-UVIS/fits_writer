@@ -110,15 +110,6 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
                     if elem2.tag.endswith('file_name'):
                         elem2.text = self.document_file.name[:-4] + self.file_extention
         
-        # root = self.xml_root.getroot()
-        # elt = root.find('//{' + ns + '}Product_Document')
-        # print(elt)
-        # ET.dump(elt)
-        
-        # root = self.xml_root.getroot()
-        # xmlstr = ET.tostring(root, encoding='utf8', method='xml')
-        # print(xmlstr)
-        ET.dump(self.xml_root)
         
 if __name__ == '__main__':
     data_dir = Path('..') / 'data'
