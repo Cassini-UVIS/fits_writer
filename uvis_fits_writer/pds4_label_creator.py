@@ -379,6 +379,9 @@ class PDS4LabelCreator(PDS4Label):
             if len(s) == 0:
                 s = (1,)
             else:
+                # For array types, the dimensions in the label must be nested
+                # in reverse order compared to the way they are stored in the
+                # fits file.  See: https://sbnwiki.astro.umd.edu/wiki/Notes_for_Labelling_FITS_files#Axis_Ordering
                 s = tuple(reversed(s))
             
             # Hard case for arrays. We have a (possibly nested set of, or possibly zero) <Group_Field_Binary> 
