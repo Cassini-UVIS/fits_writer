@@ -378,6 +378,8 @@ class PDS4LabelCreator(PDS4Label):
             s = d.shape
             if len(s) == 0:
                 s = (1,)
+            else:
+                s = tuple(reversed(s))
             
             # Hard case for arrays. We have a (possibly nested set of, or possibly zero) <Group_Field_Binary> 
             # tags describing each dimension of the array. The outermost tag corresponds to the last index,
@@ -394,11 +396,7 @@ class PDS4LabelCreator(PDS4Label):
             for i_dim_pds in range(len(s)):         # Outermost group has i_dim_pds=0
                 i_dim_idl = len(s) - 1 - i_dim_pds  # Innermost group has i_dim_idl=0
                 
-                # print nested group headers
-                this_fields = (i_dim_idl == 0) # only the innermost dimension has a field. All the others have a group
-                this_groups = 0 if this_fields else np.prod(s[0:i_dim_idl+1]) # TODO: double check the +1
-                this_group_length = this_fieldsize * np.prod(s[0:i_dim_idl+1])
-        
+                # print nested group headers        
                 if (s[i_dim_idl] <= 1) and not d.dtype.name.startswith('str') : # If we are a scalar or singleton array dimension, don't print the group header
                     field_location = field_pos[i_field]
                 else: #is scalar else not scalar
@@ -449,11 +447,11 @@ if __name__ == '__main__':
     
     data_dir = Path('..') / 'data'
     
-    # fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
-    # label_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.xml'
+    fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
+    label_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.xml'
     
-    fits_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.fits'
-    label_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.xml'
+    # fits_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.fits'
+    # label_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.xml'
     
     template_dir = Path('..') / 'templates'
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
