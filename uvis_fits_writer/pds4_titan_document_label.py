@@ -82,8 +82,8 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
                     if elem2.tag.endswith('modification_date'):
                         elem2.text = \
                             str(datetime.utcnow().year) + "-" + \
-                            str(datetime.utcnow().month) + "-" + \
-                            str(datetime.utcnow().day) + "Z"
+                            str(datetime.utcnow().strftime('%m')) + "-" + \
+                            str(datetime.utcnow().strftime('%d') + "Z")
             if elem.tag.endswith('Context_Area'):
                 for elem2 in elem.iter():
                     if elem2.tag.endswith('start_date_time'):
@@ -103,8 +103,8 @@ class PDS4TitanDocumentLabelCreator(PDS4Label):
                     if elem2.tag.endswith('publication_date'):
                         elem2.text = elem2.text = \
                             str(datetime.utcnow().year) + "-" + \
-                            str(datetime.utcnow().month) + "-" + \
-                            str(datetime.utcnow().day) + "Z"
+                            str(datetime.utcnow().strftime('%m')) + "-" + \
+                            str(datetime.utcnow().strftime('%d') + "Z")
                     if elem2.tag.endswith('description'):
                         elem2.text = elem2.text + self.fits_file.name[:-5].replace('-', '_')
                     if elem2.tag.endswith('file_name'):
