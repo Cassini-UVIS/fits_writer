@@ -66,7 +66,7 @@
   <Reference_List>
     <Internal_Reference>
       <lid_reference>urn:nasa:pds:cassini-uvis_titan-library:data_derived:</lid_reference>
-      <reference_type>document_to_investigation</reference_type>
+      <reference_type>document_to_associate</reference_type>
     </Internal_Reference>
   </Reference_List>
   <Document>
