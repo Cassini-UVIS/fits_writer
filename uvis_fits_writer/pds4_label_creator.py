@@ -101,7 +101,7 @@ class PDS4LabelCreator(PDS4Label):
         Create a product lid as described in section 5 of the PDS Data Provider's Handbook
         TODO: Need a more generic way to construct these.
         '''
-        lid = 'urn:nasa:pds:cassini-uvis_titan-library:data:' + self.fits_file.stem.lower()
+        lid = 'urn:nasa:pds:cassini-uvis_titan-library:data_derived:' + self.fits_file.stem.lower()
         return lid
     
     def get_investigation_area_lid(self):
