@@ -66,7 +66,7 @@
   <Reference_List>
     <Internal_Reference>
       <lid_reference>urn:nasa:pds:cassini-uvis_titan-library:data_derived:</lid_reference>
-      <reference_type>document_to_investigation</reference_type>
+      <reference_type>document_to_associate</reference_type>
     </Internal_Reference>
   </Reference_List>
   <Document>
@@ -84,7 +84,7 @@
       <Document_File>
         <file_name>FUV2014-265-11-15-21-UVIS-208TI-EUVFUV002-PRIME.png</file_name>
         <local_identifier>plot</local_identifier>
-        <document_standard_id>Encapsulated Postscript</document_standard_id>
+        <document_standard_id>PNG</document_standard_id>
       </Document_File>
     </Document_Edition>
   </Document>
