@@ -1,0 +1,18 @@
+name: uvis
+channels:
+  - anaconda
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - dask
+  - astropy
+  - pvl
+  - spiceypy
+  - gdal
+  - matplotlib
+  - openpyxl
+  - pip:
+      - planetarypy
