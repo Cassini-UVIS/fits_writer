@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.io import ascii
 from astropy.table import Table
 import numpy as np
-from _collections import OrderedDict
+from collections import OrderedDict
 import pandas
 from pathlib import Path
 
