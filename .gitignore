@@ -127,6 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
 /data/
 /spice/
 /output/
@@ -134,3 +135,11 @@ dmypy.json
 .project
 .pydevproject
 templates/~$Titan_UVIS_data_definition_v*.xlsx
+kernels/ck
+kernels/dsk
+kernels/fk
+kernels/ik
+kernels/pck
+kernels/sclk
+kernels/spk
+kernels/*.tm
