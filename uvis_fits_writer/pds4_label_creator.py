@@ -438,6 +438,11 @@ class PDS4LabelCreator(PDS4Label):
                     self.create_sub_element(field_binary_elt, 'field_location', text=str(field_location), keys={'unit': 'byte'})
                     self.create_sub_element(field_binary_elt, 'data_type', text=this_data_type)
                     self.create_sub_element(field_binary_elt, 'field_length', text=str(this_fieldsize), keys={'unit': 'byte'})
+
+                    # Get the description from the spreadsheet
+                    condition = self.template['L2A_product_definition']['FIELD NAME'] == fields[i_field]
+                    field_description = self.template['L2A_product_definition']['COMMENT'][condition]
+                    self.create_sub_element(field_binary_elt, 'description', text=field_description.values[0])
                     
                     if this_offset != 0:
                         self.create_sub_element(field_binary_elt, 'value_offset', text=str(this_offset))
