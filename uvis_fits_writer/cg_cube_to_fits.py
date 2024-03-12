@@ -26,7 +26,7 @@ from planetarypy.spice.kernels import list_kernels_for_day
 
 # TODO: Move this to a general spice function library.
 def get_orbit_number(sclk_time):
-    spice_dir = Path('..') / 'kernels'
+    spice_dir = Path(__file__).parent.parent / 'kernels'
     orb_file = spice_dir / 'orb' / 'cas_v40.orb'
     orb_numbers = []
     orb_sclk_times = []
@@ -34,7 +34,7 @@ def get_orbit_number(sclk_time):
         lines = file.readlines()[2:]
         for line in lines:
             parts = [p for p in line.split(' ') if p != '']
-            orb_numbers.append(np.int(parts[0]))
+            orb_numbers.append(int(parts[0]))
             orb_sclk_times.append(np.double(parts[5].split('/')[1]))
             
     orb_numbers = np.array(orb_numbers)
@@ -377,12 +377,15 @@ class CGCubeToFITS(object):
         names.append('OBS_UTC')
         utc = pds_label['START_TIME'].isoformat()
         values.append(utc)
+
+        spice_dir = Path(__file__).parent.parent / 'kernels' / 'lsk'
+        leap_second_kernel = spice_dir / 'naif0012.tls'
         
         names.append('OBS_ET')
-        cspice.furnsh('../kernels/lsk/naif0012.tls') # TODO: Dynamically download?
+        cspice.furnsh(str(leap_second_kernel)) # TODO: Dynamically download?
         t = cspice.str2et(utc.split('+')[0])
         values.append(t)
-        cspice.unload('../kernels/lsk/naif0012.tls')
+        cspice.unload(str(leap_second_kernel))
         
         names.append('END_UTC')
         values.append(pds_label['STOP_TIME'].isoformat())
@@ -521,24 +524,24 @@ def get_kernels_for_day(year, doy, spice_dir):
     Better yet, just port the kernel_finder to Python.
     '''
     
-    # Run IDL to get the list of kernels, dumping output to a temp directory
-    idl_path_cmd = "!path = !path + ':" + str(Path.home() / "git" / "cassini-uvis-tools" / "kernel_finder") + "'"
-    idl_kernel_cmd = "cassini_spice_kernel_list, " + str(year) + ", " + str(doy) + \
-        ", fkernel_cg, fkernel, kernel_list, LOCAL_KERNEL_PATH='" + str(spice_dir) + "/'"
-    idl_cmd = '/Applications/harris/envi56/idl88/bin/idl -e "' + idl_path_cmd + \
-        ' & ' + idl_kernel_cmd + '"'
-    cp = subprocess.run(idl_cmd, capture_output=True, shell=True)
+    # # Run IDL to get the list of kernels, dumping output to a temp directory
+    # idl_path_cmd = "!path = !path + ':" + str(Path.home() / "git" / "cassini-uvis-tools" / "kernel_finder") + "'"
+    # idl_kernel_cmd = "cassini_spice_kernel_list, " + str(year) + ", " + str(doy) + \
+    #     ", fkernel_cg, fkernel, kernel_list, LOCAL_KERNEL_PATH='" + str(spice_dir) + "/'"
+    # idl_cmd = '/Applications/harris/envi56/idl88/bin/idl -e "' + idl_path_cmd + \
+    #     ' & ' + idl_kernel_cmd + '"'
+    # cp = subprocess.run(idl_cmd, capture_output=True, shell=True)
     
-    # Parse out the list of kernel files from the stdout.
-    kernel_list = np.array(str(cp.stdout).split('\\n'))
-    w = np.where('*****************************************************' == kernel_list)[0]
-    kernel_list = kernel_list[w[0]+6:w[1]-1]
+    # # Parse out the list of kernel files from the stdout.
+    # kernel_list = np.array(str(cp.stdout).split('\\n'))
+    # w = np.where('*****************************************************' == kernel_list)[0]
+    # kernel_list = kernel_list[w[0]+6:w[1]-1]
     
     
     # Call PlanetaryPy kernel finder.
-    # year_doy = str(year) + '-' + str(doy)
-    # kernels = list_kernels_for_day('cassini', year_doy, year_doy)
-    # kernels = [kernel for kernel in kernels if not (kernel.endswith('.ti') and not 'uvis' in kernel)]
+    year_doy = str(year) + '-' + str(doy)
+    kernel_list = list_kernels_for_day('cassini', year_doy, year_doy)
+    #kernels = [kernel for kernel in kernels if not (kernel.endswith('.ti') and not 'uvis' in kernel)]
     
     
     # return the list of kernel files.  We don't need the files themselves,
@@ -549,24 +552,28 @@ if __name__ == '__main__':
     
     # orb_num = get_orbit_number(1871614519.013)
     # print(orb_num)
+
+    parent_dir = Path(__file__).resolve().parent.parent
     
-    spice_dir = Path('..') / 'spice'
+    spice_dir = parent_dir / 'spice'
     
     # kernel_list = get_kernels_for_day(2014, 265, spice_dir)
     # print(kernel_list)
     
-    kernel_list = get_kernels_for_day(2005, 46, spice_dir)
-    print(kernel_list)
+    # kernel_list = get_kernels_for_day(2005, 46, spice_dir)
+    # print(kernel_list)
     
     # Test list to avoid downloading for now.
-    # kernel_list = ['naif0012.tls', 'cas00172.tsc', 'de432s.bsp',
-    #      '150122R_SCPSE_14251_14283.bsp', 'cas_rocks_v18.tf', 'cas_status_v04.tf',
-    #      'cas_v43.tf', '14212_14279py_as_flown.bc', '14263_14268ra.bc',
-    #      '14244_14273ca_ISS.bc', 'cpck15Dec2017.tpc', 'cpck_rock_21Jan2011.tpc',
-    #      'pck00010.tpc', 'cas_uvis_v07.ti']
+    kernel_list = ['naif0012.tls', 'cas00172.tsc', 'de432s.bsp',
+         '150122R_SCPSE_14251_14283.bsp', 'cas_rocks_v18.tf', 'cas_status_v04.tf',
+         'cas_v43.tf', '14212_14279py_as_flown.bc', '14263_14268ra.bc',
+         '14244_14273ca_ISS.bc', 'cpck15Dec2017.tpc', 'cpck_rock_21Jan2011.tpc',
+         'pck00010.tpc', 'cas_uvis_v07.ti']
     
-    data_dir = Path('..') / 'data'
-    template_dir = Path('..') / 'templates'
+    # TODO: make these paths aware of the location of this file.  Just a ".." breaks
+    # depending on the cwd.
+    data_dir = parent_dir / 'data'
+    template_dir = parent_dir / 'templates'
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
     
     # cube_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined.fits'
