@@ -94,7 +94,7 @@ class UVISFitsTemplateFactory(object):
         for row in header_rows.index:
             dtype = header_rows['DATA TYPE'][row]
             if dtype == 'bytes':
-                dtype = np.str
+                dtype = str
                 value = ''
             else:
                 value = np.array([0], dtype=dtype)[0]
@@ -150,7 +150,7 @@ class UVISFitsTemplateFactory(object):
             else:
                 # Data types.
                 if dtype == 'bytes':
-                    dtype = np.str #TODO: use dtype=object here?
+                    dtype = str #TODO: use dtype=object here?
                 value = np.zeros(shape=array_shape, dtype=dtype)
                 
             data[field_name] = value
@@ -175,7 +175,7 @@ class UVISFitsTemplateFactory(object):
             self.construct_hdu(name, hdu_rows, n_samples=n_samples, n_sp_kernels=n_sp_kernels)
     
 if __name__ == '__main__':
-    template_dir = Path('..') / 'templates'
+    template_dir = Path(__file__).parent.parent / 'templates'
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
     new_fits_file = 'test_fits_file.fits'
     factory = UVISFitsTemplateFactory()
