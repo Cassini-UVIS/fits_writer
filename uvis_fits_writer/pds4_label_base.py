@@ -51,7 +51,7 @@ class PDS4Label(ABC):
         # TODO: There has to be a better way to add these via the ElementTree library
         #     At present all I can find is a way to add the first line via the
         #     xml_declaration=True keyword.  But the others I'm not sure.
-        preamble_file = Path('..') / 'pds' / 'xml_preamble.xml'
+        preamble_file = Path(__file__).parent.parent / 'pds' / 'xml_preamble.xml'
         with open(preamble_file, 'r') as f:
             self.preable_content = f.read()
     

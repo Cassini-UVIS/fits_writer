@@ -22,11 +22,12 @@ from datetime import datetime
 import pvl
 from spiceypy import spiceypy as cspice
 import subprocess
-from planetarypy.spice.kernels import list_kernels_for_day
+from planetarypy.spice.kernels import list_kernels_for_day, get_metakernel_and_files
+
+spice_dir = Path(__file__).parent.parent / 'kernels'
 
 # TODO: Move this to a general spice function library.
 def get_orbit_number(sclk_time):
-    spice_dir = Path(__file__).parent.parent / 'kernels'
     orb_file = spice_dir / 'orb' / 'cas_v40.orb'
     orb_numbers = []
     orb_sclk_times = []
@@ -378,8 +379,7 @@ class CGCubeToFITS(object):
         utc = pds_label['START_TIME'].isoformat()
         values.append(utc)
 
-        spice_dir = Path(__file__).parent.parent / 'kernels' / 'lsk'
-        leap_second_kernel = spice_dir / 'naif0012.tls'
+        leap_second_kernel = spice_dir / 'lsk' / 'naif0012.tls'
         
         names.append('OBS_ET')
         cspice.furnsh(str(leap_second_kernel)) # TODO: Dynamically download?
@@ -541,6 +541,9 @@ def get_kernels_for_day(year, doy, spice_dir):
     # Call PlanetaryPy kernel finder.
     year_doy = str(year) + '-' + str(doy)
     kernel_list = list_kernels_for_day('cassini', year_doy, year_doy)
+    kernel_list = [k.split('/')[1] for k in kernel_list]
+
+    #get_metakernel_and_files('cassini', year_doy, year_doy, spice_dir)
     #kernels = [kernel for kernel in kernels if not (kernel.endswith('.ti') and not 'uvis' in kernel)]
     
     
@@ -555,12 +558,10 @@ if __name__ == '__main__':
 
     parent_dir = Path(__file__).resolve().parent.parent
     
-    spice_dir = parent_dir / 'spice'
-    
     # kernel_list = get_kernels_for_day(2014, 265, spice_dir)
     # print(kernel_list)
     
-    # kernel_list = get_kernels_for_day(2005, 46, spice_dir)
+    # kernel_list = get_kernels_for_day(2014, 265, spice_dir)
     # print(kernel_list)
     
     # Test list to avoid downloading for now.

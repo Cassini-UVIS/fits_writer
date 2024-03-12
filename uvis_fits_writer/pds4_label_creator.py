@@ -11,7 +11,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 import csv
 import pandas
-from uvis_fits_writer.pds4_label_base import PDS4Label
+from pds4_label_base import PDS4Label
 
 class PDS4LabelCreator(PDS4Label):
     '''
@@ -65,7 +65,7 @@ class PDS4LabelCreator(PDS4Label):
         mod_history = ET.SubElement(xml_parent, 'Modification_History')
         
         # Point to mod history file.
-        mod_history_file = Path('..') / 'pds' / 'modification_history.txt'
+        mod_history_file = Path(__file__).parent.parent / 'pds' / 'modification_history.txt'
         
         # Loop over each row in the CSV file and append to the mod history.
         with open(mod_history_file, 'r') as f:
@@ -439,7 +439,6 @@ class PDS4LabelCreator(PDS4Label):
                     self.create_sub_element(field_binary_elt, 'data_type', text=this_data_type)
                     self.create_sub_element(field_binary_elt, 'field_length', text=str(this_fieldsize), keys={'unit': 'byte'})
                     
-                    
                     if this_offset != 0:
                         self.create_sub_element(field_binary_elt, 'value_offset', text=str(this_offset))
                         
@@ -448,7 +447,7 @@ class PDS4LabelCreator(PDS4Label):
     
 if __name__ == '__main__':
     
-    data_dir = Path('..') / 'data'
+    data_dir = Path(__file__).parent.parent / 'data'
     
     fits_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.fits'
     label_file = data_dir / 'FUV2014_265_11_15_21_UVIS_208TI_EUVFUV002_PRIME_combined_new.xml'
@@ -456,7 +455,7 @@ if __name__ == '__main__':
     # fits_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.fits'
     # label_file = data_dir / 'EUV2005_046_08_55_19_UVIS_003TI_EUVFUV001_PRIME_combined.xml'
     
-    template_dir = Path('..') / 'templates'
+    template_dir = Path(__file__).parent.parent / 'templates'
     template_file = template_dir / 'Titan_UVIS_data_definition_v0.3.xlsx'
     
     label_creator = PDS4LabelCreator(fits_file, template_file)
