@@ -173,6 +173,16 @@ class PDS4LabelCreator(PDS4Label):
         
         self.create_sub_element(identification_area, 'product_class', 
                                                 text = self.xml_root.tag)
+
+        citation_information = self.create_sub_element(identification_area, 'Citation_Information')
+        self.create_sub_element(citation_information, 'author_list',
+                                                  text = 'Royer, E.; Elliott, J.')
+        self.create_sub_element(citation_information, 'editor_list', 
+                                                 text= 'Neakrase, L; Huber, L.')
+        self.create_sub_element(citation_information, 'publication_year', 
+                                                 text= '2024')
+        self.create_sub_element(citation_information, 'description', 
+                                                 text= 'Raw, calibrated and level 2b Cassini-UVIS data at Titan, including detector images')
         
         self.get_modification_history(identification_area)
         
@@ -190,21 +200,33 @@ class PDS4LabelCreator(PDS4Label):
         primary_result_summary = self.create_sub_element(observation_area, 'Primary_Result_Summary')
         self.create_sub_element(primary_result_summary, 'purpose', 
                                           text = 'Science')
+        self.create_sub_element(primary_result_summary, 'purpose', 
+                                          text = 'Calibration')
+        self.create_sub_element(primary_result_summary, 'purpose', 
+                                          text = 'Observation Geometry')
         self.create_sub_element(primary_result_summary, 'processing_level', 
-                                                   text=self.pds_product_level)
+                                                   text='raw')
+        self.create_sub_element(primary_result_summary, 'processing_level', 
+                                                   text='Calibrated')
+        self.create_sub_element(primary_result_summary, 'processing_level', 
+                                                   text='Derived')
+        self.create_sub_element(primary_result_summary, 'description', 
+                                                   text='Cassini-UVIS Titan Detector images')
         
         science_facets = self.create_sub_element(primary_result_summary,'Science_Facets')
         self.create_sub_element(science_facets, 'wavelength_range', 
                                                    text='Ultraviolet')
         self.create_sub_element(science_facets, 'domain', 
                                          text = 'Atmosphere') # TODO: Need to be able to set this for other types of observations.
+        self.create_sub_element(science_facets, 'domain', 
+                                         text = 'Ionosphere')
         self.create_sub_element(science_facets, 'discipline_name', 
-                                                  text='Atmospheres') # TODO: Need to be able to set this for other types of observations.
+                                                  text='Spectroscopy') # TODO: Need to be able to set this for other types of observations.
         
-        self.create_sub_element(science_facets, 'facet1', text='Structure')
+        self.create_sub_element(science_facets, 'facet1', text='Spectral Image')
         
         investigation_area = self.create_sub_element(observation_area, 'Investigation_Area')
-        self.create_sub_element(investigation_area, 'name', text='UVIS') # TODO: Dynamically set this based on mission/instrument.
+        self.create_sub_element(investigation_area, 'name', text='Cassini-Huygens') # TODO: Dynamically set this based on mission/instrument.
         self.create_sub_element(investigation_area, 'type', text='Mission')
         
         internal_reference = self.create_sub_element(investigation_area, 'Internal_Reference')
@@ -214,11 +236,10 @@ class PDS4LabelCreator(PDS4Label):
                                                  text='data_to_investigation')
         
         observing_system = self.create_sub_element(observation_area, 'Observing_System')
-        self.create_sub_element(observing_system, 'name', 
-                                       text=self.get_spacecraft())
+        
         observing_system_component = self.create_sub_element(observing_system, 'Observing_System_Component') # Instrument
         self.create_sub_element(observing_system_component, 'name', 
-                                       text=self.get_instrument())
+                                       text='Ultraviolet Imaging Spectrograph')
         self.create_sub_element(observing_system_component, 'type', 
                                        text='Instrument')
         internal_reference = self.create_sub_element(observing_system_component, 'Internal_Reference')
@@ -228,7 +249,7 @@ class PDS4LabelCreator(PDS4Label):
                                                  text='is_instrument')
         observing_system_component = self.create_sub_element(observing_system, 'Observing_System_Component') # Spacecraft
         self.create_sub_element(observing_system_component, 'name', 
-                                       text=self.get_spacecraft())
+                                       text='Cassni Orbiter')
         self.create_sub_element(observing_system_component, 'type', 
                                        text='Host')
         internal_reference = self.create_sub_element(observing_system_component, 'Internal_Reference')
@@ -252,6 +273,22 @@ class PDS4LabelCreator(PDS4Label):
         self.create_sub_element(observation_area, 'Discipline_Area')
         
         # End <Observation_Area> tag -------------------------------------------
+
+        # Begin <Reference_list> tag -------------------------------------------
+        reference_list = self.create_sub_element(self.xml_root, 'Reference_List')
+        internal_reference = self.create_sub_element(reference_list , 'Internal_Reference')
+        self.create_sub_element(internal_reference, 'lid_reference', 
+                                                text='urn:nasa:pds:cassini-uvis_titan-library:document:thetitanuvislibrary_userguide')
+        self.create_sub_element(internal_reference, 'reference_type',
+                                                 text='data_to_document')
+        external_reference = self.create_sub_element(reference_list, 'External_Reference')
+        self.create_sub_element(external_reference, 'reference_text', 
+                                                text='https://pds-atmospheres.nmsu.edu/data_and_services/atmospheres_data/Cassini/logs/Titan%20EUV_FUV%20Book.pdf')
+        self.create_sub_element(external_reference, 'description',
+                                                 text='Titan EUV-FUV Book of Cassini-UVIS detector images')
+        
+        
+        # End <Reference_List> tag ---------------------------------------------
         
         # Begin <File_Area_Observational> tag ----------------------------------
         file_area_observational = self.create_sub_element(self.xml_root, 'File_Area_Observational')
